@@ -6,17 +6,20 @@ require("dotenv").config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
-// 1. MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.log("❌ DB Connection Error:", err));
 
-// 2. Message Schema
 const messageSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -26,17 +29,18 @@ const messageSchema = new mongoose.Schema({
 
 const Message = mongoose.model("ContactMessage", messageSchema);
 
+app.get("/", (req, res) => {
+  res.send("🚀 Backend Server is Running!");
+});
 
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
 
   try {
-
     const newMessage = new Message({ name, email, message });
     await newMessage.save();
     console.log("💾 Message saved to MongoDB");
 
-    
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -44,7 +48,7 @@ app.post("/api/contact", async (req, res) => {
         pass: process.env.EMAIL_PASS, 
       },
       tls: {
-        rejectUnauthorized: false, 
+        rejectUnauthorized: false,
       },
     });
 
@@ -56,7 +60,7 @@ app.post("/api/contact", async (req, res) => {
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     };
 
-    // C. Send Email
+
     await transporter.sendMail(mailOptions);
     console.log("📧 Email sent successfully");
 
@@ -68,11 +72,12 @@ app.post("/api/contact", async (req, res) => {
     console.error("❌ ERROR:", error.message);
     res.status(500).json({
       success: false,
-      message: "Something went wrong!",
+      message: "Internal Server Error",
       error: error.message,
     });
   }
 });
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
