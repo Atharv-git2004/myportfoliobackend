@@ -26,25 +26,25 @@ const messageSchema = new mongoose.Schema({
 
 const Message = mongoose.model("ContactMessage", messageSchema);
 
-// 3. API Endpoint (POST)
+
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
 
   try {
-    // A. Save to Database
+
     const newMessage = new Message({ name, email, message });
     await newMessage.save();
     console.log("💾 Message saved to MongoDB");
 
-    // B. Email Transporter
+    
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // Puthiya 16-digit App Password ivide venam
+        pass: process.env.EMAIL_PASS, 
       },
       tls: {
-        rejectUnauthorized: false, // Certificate error ozhivakkan
+        rejectUnauthorized: false, 
       },
     });
 
